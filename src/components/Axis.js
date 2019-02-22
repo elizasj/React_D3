@@ -1,52 +1,58 @@
-import React, { Component } from "react"
+import React, { useEffect } from "react"
 import * as d3 from "d3"
 
-class Axis extends Component {
-  state = {
-    // d3 helpers
-    xScale: this.props.xAxis,
-    yScale: this.props.yScale
-  }
+function Axis({ chartData, svgDimensions, margin }) {
+  // svg dimensions
+  const { height, width } = svgDimensions
+  // d3 helpers
+  const xScale = d3.scaleTime().range([margin.left, width - margin.right])
+  const yScale = d3.scaleLinear().range([height - margin.bottom, margin.top])
+  const timeParse = d3.timeParse("%Y-%m-%d")
 
-  //create axis
-  xAxis = d3
+  const xAxis = d3
     .axisBottom()
-    .scale(this.state.xScale)
+    .scale(xScale)
     .tickFormat(d3.timeFormat("%b"))
-  yAxis = d3
+  const yAxis = d3
     .axisLeft()
-    .scale(this.state.yScale)
+    .scale(yScale)
     .tickFormat(d => `${d}`)
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!nextProps) return { ...prevState }
-    const { xScale, yScale } = prevState
+  //refs
+  let xAxisElt = React.createRef()
+  let yAxisElt = React.createRef()
 
-    xScale.domain(this.props.xExtent)
-    yScale.domain([0, this.props.max])
-  }
+  // D3 math
+  // for each  line on a chart, get data points
+  Object.values(chartData).forEach(line => {
+    // map date to x position  - get min & max of the date
+    const xExtent = d3.extent(line, l => l.date).map(l => timeParse(l))
+    xScale.domain(xExtent)
 
-  // invoked immediately after updating. not called for the initial render.
-  componentDidUpdate(prevProps, prevState) {
+    // map values to y position - get max of value
+    const max = d3.max(line, l => l.value)
+    yScale.domain([0, max])
+  })
+
+  // invoked on every render
+  useEffect(() => {
     // create axis'
-    d3.select(this.refs.xAxis).call(this.state.xAxis)
-    d3.select(this.refs.yAxis).call(this.state.yAxis)
-  }
+    d3.select(xAxisElt).call(xAxis)
+    d3.select(yAxisElt).call(yAxis)
+  })
 
-  render() {
-    console.log(this.props.data)
-
-    return (
-      <g>
-        <g
-          ref="xAxis"
-          transform={`translate(0, ${this.props.height -
-            this.props.margin.bottom})`}
-        />
-        <g ref="yAxis" transform={`translate(${this.props.margin.left}, 0)`} />
-      </g>
-    )
-  }
+  return (
+    <g>
+      <g
+        ref={elt => (xAxisElt = elt)}
+        transform={`translate(0, ${height - margin.bottom})`}
+      />
+      <g
+        ref={elt => (yAxisElt = elt)}
+        transform={`translate(${margin.left}, 0)`}
+      />
+    </g>
+  )
 }
 
 export default Axis

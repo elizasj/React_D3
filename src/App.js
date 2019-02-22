@@ -1,5 +1,4 @@
 import React, { Component } from "react"
-
 import "./App.css"
 import getData from "./helpers/DataHandling"
 
@@ -11,9 +10,6 @@ class App extends Component {
   // async wrapper for asynchronous flow w/ await/fetch
   async componentDidMount() {
     const data = await getData()
-    // this.setState({
-    //   data
-    // })
 
     let row, chartsObjs, locale, linesData
 
@@ -47,13 +43,15 @@ class App extends Component {
 
     return (
       <div className="App">
-        {charts.map((chart, index) => (
-          <Chart
-            key={index}
-            chartLocale={chart.locale}
-            chartData={chart.linesData}
-          />
-        ))}
+        <div className="">
+          {charts.map((chart, index) => (
+            <Chart
+              key={index}
+              chartLocale={chart.locale}
+              chartData={chart.linesData}
+            />
+          ))}
+        </div>
       </div>
     )
   }
